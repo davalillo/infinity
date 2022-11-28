@@ -1,0 +1,1393 @@
+openapi: 3.0.1
+info:
+  title: Infinity Blocks API
+  description:  Definición de la API para el acceso al 
+                backend de Infiniy Life
+  version: 0.0.1
+  contact:
+    email: davalillo@gmail.com
+    name: Guillermo Davalillo
+
+servers: 
+  - url: '{protocol}://localhost:{port}'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: http
+      port:
+        enum: 
+          - '5000'
+          - '443'
+        default: '5000'
+
+paths: 
+  /usuarios/login:
+    post:
+      summary: Método que valida los datos de acceso del usuario
+      tags:
+        - Usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                validado:
+                  summary: El usuario está validado
+                  value:
+                    userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    username: "agarcia"
+                    email: agarcia@mail.com
+                    esMiembro: true
+                    cuentaVerificada: true
+                usuarioNoValidado:
+                  summary: El usuario está no validado
+                  value:
+                    userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    username: "agarcia"
+                    email: agarcia@mail.com
+                    esMiembro: true
+                    cuentaVerificada: false
+                usuarioEsMiembro:
+                  summary: El usuario tiene una membresía activa
+                  value:
+                    userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    username: "agarcia"
+                    email: agarcia@mail.com
+                    esMiembro: true
+                    cuentaVerificada: true
+                    
+                usuarnoNoEsMiembro:
+                  summary: El usuario no tiene una membresía activa
+                  value:
+                    userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    username: "agarcia"
+                    email: agarcia@mail.com
+                    esMiembro: false
+                    cuentaVerificada: true
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '5XX':
+          $ref: '#/components/responses/5xxUnexpected'
+                
+      security: []
+
+# El proceso de recuperación de contraseña no está finalizado
+  /usuarios/validarcodigo:
+    post:
+      description: Método para validar un código que ha sido enviado por email
+      tags:
+       - Usuario
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidacionRequest'
+      responses:
+        '204':
+          description: '**No Content** indica que el código es correcto'
+        '404':
+          description: 'El código no es correcto'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+
+# El proceso de recuperación de contraseña no está fin
+  /usuarios/solicitarcodigo/{userId}:
+    get:
+      description: Método para solicitar el envío de un código de validación
+      tags:
+        - Usuario
+      parameters:
+        - in: path
+          required: true
+          name: userId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: '**No content** indica que el código se ha solicitado correctamente'
+        '400': 
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  
+  /usuarios/checkToken/{token}:
+    get:
+      description: Método para verificar que el token de recuperación contraseña es correcto.
+      tags:
+       - Usuario
+      parameters:
+        - in: path
+          required: true
+          name: token
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: '**OK** indica que el token es correcto.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckTokenResponse'
+                
+      security: []  
+  
+  /usuarios/cambiarPassword:
+    post:
+      description: Método para cambiar el password de un usuario.
+      tags:
+        - Usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarPasswordRequest'
+
+
+
+      security: []
+        
+  /usuarios/perfil/{userId}:
+    get:
+      description: Método para obtener la información que se muestra en el perfil de usuario
+      tags:
+        - Usuario
+      parameters:
+        - in: path
+          required: true
+          name: userId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: '**OK** Usuario encontrado'
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/PerfilUsuario'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '5XX':
+          $ref: '#/components/responses/5xxUnexpected'
+
+
+  /usuarios:
+    post:
+      summary: Método para la creación de usuarios
+      tags:
+        - Usuario
+      requestBody: 
+        required: true
+        content: 
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/AltaUsuarioRequest'
+            
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                creado:
+                  summary: El usuario ha sido creado
+                  value:
+                    userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                    username: "agarcia"
+                    email: agarcia@mail.com
+                    esMiembro: false
+                    cuentaVerificada: false
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+          # examples:
+          #   correoEnUso:
+          #     summary: El correo electrónico ya está utilizado.
+          #     value:
+          #       code: 10001
+          #       message: 'El correo electrónico está en uso.'
+          #   usuarioEnUso:
+          #     summary: El usuario ya está utilizado.
+          #     value:
+          #       code: 10002
+          #       message: 'El usuario está en uso.'
+          #   problemaContraseña:
+          #     summary: Hay algún problema con la contraseña
+          #     value:
+          #       code: 10003
+          #       message: 'Hay algún problema con la contraseña.'
+          #   patrocinadorNoExiste:
+          #     summary: El patrocinador no existe
+          #     value:
+          #       code: 10004
+          #       message: 'El patrocinador no existe.'
+
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /usuarios/patrocinador/{username}:
+    get:
+      summary: Método para saber si existe el patrocinador buscando por su nombre de usuario
+      tags: 
+        - Usuario
+      parameters:
+        - in: path
+          required: true
+          name: username
+          schema:
+            type: string
+            example: flanagan111
+      responses:
+        '204':
+          description: '**No content**. El patrocinador solicitado existe.'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+        
+  /usuarios/{userId}:
+    get:
+      description: Método para recuperar la información de un usuario
+      tags:
+        - Usuario
+      parameters:
+        - name: userId
+          description: Identificador del usuario que se quiere recuperar
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '478912798f27418fb4e10c7eb89ec1bb'
+      responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Usuario'
+          '401': 
+            description: No encontrado
+
+  
+
+  /configuracion/{userId}:
+    get:
+      summary: Método para recuperar toda la configuración de un usuario
+      tags:
+        - Configuracion
+      parameters:
+        - name: userId
+          description: Identificador del usuario del que se pide la configuración
+          in: path
+          required: true
+          schema:
+              $ref: '#/components/schemas/UserId'
+      responses:
+        '200': 
+          description: Petición correcta
+          content:
+            application/json:
+              schema:
+                
+                $ref: '#/components/schemas/ConfiguracionResponse'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+          
+          
+        '401': 
+          description: No autorizado
+  
+  /configuracion/perfil:
+    put:
+      summary: Metodo para actualizar los datos de perfil del usuario
+      tags:
+        - Configuracion
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionPerfil'
+      responses:
+        '200': 
+          description: Ok
+        '401': 
+          description: No autorizado
+        '404':
+          description: No encontrado
+  
+  /configuracion/informacion:
+    put:
+      summary: > 
+              Método para actualizar los datos personales del usuario
+      tags:
+        - Configuracion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfiguracionInformacion'
+      responses:
+        '200': 
+          description: Ok
+        '401': 
+          description: No autorizado
+        '404':
+          description: No encontrado
+        
+  
+  /configuracion/beneficiario:
+    put:
+      summary: Método para actualizar la información de beneficiarios de un usuario
+      tags: 
+        - Configuracion
+      requestBody: 
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                beneficiario:
+                  $ref: '#/components/schemas/Beneficiario'
+      responses:
+        '200':
+          description: Ok
+        '401': 
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+    delete:
+      summary: Método para eliminar un beneficiario
+      tags:
+        - Configuracion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserId'
+
+      responses:
+        '204':
+          description: '**No Content** indica que el beneficiario se ha borrado correctamente'
+
+  /configuracion/congelarCuenta:
+    post:
+      summary: Método para bloquear la cuenta en caso de emergencia.
+      tags:
+        - Configuracion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: '**No content** indica que la cuenta se ha bloqueado correctamente.'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+  /aportaciones/{userId}:
+    get:
+      summary: Método para obtener la información que se muestra en la pantalla de Aportaciones
+      tags:
+        - Aportaciones
+      parameters:
+        - in: path
+          required: true
+          name: userId
+          schema: 
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: '**OK** retorna la información de aportaciones.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AportacionesResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+  
+  /aportaciones:
+    post:
+      summary: Método para dar de alta una nueva aportación.
+      tags:
+        - Aportaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+             $ref: '#/components/schemas/AportacionNueva'
+      responses:
+        '200':
+          description: '**OK** aportación guardada correctamente.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Aportacion'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'        
+
+  /aportaciones/retirar:
+    post:
+      summary: Método para solicitar la retirada de una aportación.
+      tags:
+        - Aportaciones
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AportacionRetirar'
+      responses:
+        '200':
+          description: '**OK** retirada de la aportación solicitada correctamente.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Aportacion'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+
+
+  /retiros/{userId}:
+    get:
+      summary: Método para recuperar los datos que se muestran en la pantalla de Retiros
+      tags:
+        - Retiros
+      parameters:
+        - in: path
+          required: true
+          name: userId
+          schema: 
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: '**OK** retirada de la aportación solicitada correctamente.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetirosResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+
+  /retiros/beneficioSolicitar:
+    post: 
+      summary: Método para comenzar el proceso de retirada de beneficios.        
+      tags:
+        - Retiros
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  description: Identificador de usuario que solicita la retidara de beneficios.
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: '**No Content** indica que se ha solicitado correctamente el envío del correo de confirmación.'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+
+  /retiros/beneficioConfirmar:
+    post:
+      summary: Método para confirmar la retirada de beneficios.
+      tags:
+        - Retiros
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                retiroId:
+                  description: Identificador del retiro.
+                  type: string
+                  format: uuid
+                codigoConfirmacion:
+                  description: Código de confirmación recibido por correo electrónico
+                  type: integer
+      responses:
+        '200':
+          description: '**OK** indica que se ha solicitado correctamente el envío del correo de confirmación.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retiros"  
+
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'              
+  
+  /retiros/solicitar:
+    post:
+      summary: Método para comenzar el proceso de un retiro.        
+      tags:
+        - Retiros
+      requestBody: 
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                retiroId:
+                  description: Identificador de usuario que solicita el retiro.
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: '**No Content** indica que se ha solicitado correctamente el envío del correo de confirmación.'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+  
+  /retiros/validar:
+    post:
+      summary: Método que valida el código recibido por correo para realizar un pedido
+      tags:
+        - Retiros
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                retiroId:
+                  description: Identificador del retiro.
+                  type: string
+                  format: uuid
+                codigoConfirmacion:
+                  description: Código de confirmación recibido por correo electrónico
+                  type: integer
+      responses:
+        '200':
+          description: '**OK** indica que se ha confirmado correctamente el envío del correo de confirmación.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Retiros"  
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'    
+  
+  /retiros/aceptar:
+    post:
+      summary: Método que se utiliza para confimar que se ya se ha realizado un retiro contra la blockchain
+      tags:
+        - Retiros
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetirosConfirmacion'
+      responses:
+        '200':
+          description: '**OK** indica que se ha solicitado correctamente el envío del correo de confirmación.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RetirosHistorial"  
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+        
+
+  /asesores/alta:
+    post:
+      summary: Método que procesa el alta como asesor de un usuario
+      tags:
+       - Asesores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsesorAlta'
+      responses:
+        '200':
+          description: '**OK** indica que se ha procesado correctamente el alta. Se devuelve el objeto con la información de membresía.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AsesorResponse"  
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+
+  /asesores/{userId}:
+    get:
+      summary: Método que obtiene la información referente a la membresía de un usuario
+      tags:
+        - Asesores
+      parameters:
+        - in: path
+          required: true
+          name: userId
+          schema: 
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: '**OK**. Se devuelve el objeto con la información de membresía.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AsesorResponse"  
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        
+  /asesores/solicitarBono:
+    post:
+      summary: Método para comezar el proceso de solicitud de un bono.
+      tags:
+        - Asesores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BonoSolicitarRequest'
+      responses:
+        '204':
+          description: '**No Content** indica que se ha solicitado correctamente el envío del correo de confirmación.'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'  
+  
+  /asesores/validarBono:
+    post:
+      summary: Metodo que valida el código de confirmación recibido
+      tags:
+        - Asesores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BonoValidarRequest'
+      responses:
+        '200':
+          description: '**OK** indica que se ha confirmado correctamente el envío del correo de confirmación.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AsesorResponse"  
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'   
+      
+
+  /asesores/informe/{userId}:
+    get:
+      summary: Método que solicita el informe de actividad de los Asesores
+      tags:
+        - Asesores
+      parameters:
+        - in: path
+          description: Usuario para el que se va a generar el informe.
+          required: true
+          name: userId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200': 
+          description: '**OK**. Se devuelve un archivo PDF con el informe generado.'
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'   
+
+components:
+  schemas:
+    Usuario:
+      type: object
+      properties: 
+        username:
+          type: string
+          example: agarcia
+    
+    UserId:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+    
+    PerfilUsuario:
+      type: object 
+      properties:
+        userId:
+          description: Identificador del usuario.
+          type: string
+          format: uuid
+        urlFoto:
+          description: Url de la foto de perfil del usuario.
+          type: string 
+          example: 'https://www.petshopsuk.co.uk/images/cat/390/cats.jpg'
+        estrellasPlanBeneficio:
+          description: Número de estrellas del plan de beneficios.
+          type: number
+          minimum: 1
+          maximum: 5
+        username:
+          description: Username del usuario.
+          type: string
+          example: agarcia
+        walletAsociada:
+          description: Wallet asociada al usuario.
+          type: string
+          example: '0x45BaD4D4838cD2FFC3a846E67B8f9396d0E37942'
+        usuarioVerificado:
+          description: ¿Es un usuario verificado?
+          type: boolean
+        aportacionActiva:
+          description: Aportación activa actual del usuario
+          type: number
+          minimum: 0
+        patrocinador:
+          $ref: '#/components/schemas/Patrocinador'
+
+    Patrocinador:
+      type: object
+      properties:
+        nombre:
+          description: Nombre del patrocinador.
+          type: string
+        email:
+          description: Correo electrónico del patrocinador.
+          type: string
+        telefono:
+          description: Teléfono del patrocinador.
+          type: string
+
+    AltaUsuarioRequest:
+      type: object
+      properties: 
+        email: 
+          type: string
+          format: email
+          example: antonio.garcia@mail.com
+        username: 
+          type: string
+          example: agarcia
+        password:
+          type: string
+          pattern: '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{8,}$'
+          example: 'PasswordDificil123'
+        telefono:
+          $ref: '#/components/schemas/Telefono'
+
+    LoginRequest: 
+      type: object
+      properties:
+        username:
+          description: Login del usuario
+          type: string
+          example: Perico
+        password:
+          description: Password del  usuario
+          type: string
+          example: SuperSecurePassword123
+
+    CambiarPasswordRequest: 
+      type: object
+      properties:
+        userId:
+          description: Identificador del usuario
+          type: string
+          format: uuid
+        token: 
+          description: Token de cambio de contraseña recibido
+          type: string
+          format: uuid
+        password:
+          description: Nuevo password
+          type: string
+          example: SuperSecurePassword123
+    
+    LoginResponse:
+      type: object
+      properties: 
+        userId:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          example: agarcia
+        email:
+          type: string
+          example: agarcia@correo.com
+        esMiembro:
+          type: boolean
+          example: true
+        cuentaVerificada:
+          type: boolean
+          example: false
+    
+    ValidacionRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        codeToValidate:
+          type: number
+          example: 22334
+    
+    CheckTokenResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+
+
+    ValidacionResponse:
+      type: boolean
+
+    ConfiguracionPerfil:
+      description: Información de perfil del usuario
+      type: object
+      properties:
+        urlFotoPerfil: 
+          description: Url a la foto de perfil
+          type: string
+          format: uri
+          example: 'https://cdn-icons-png.flaticon.com/512/3112/3112993.png'
+        username:
+          description: Username del usuario
+          type: string
+          example: agarcia
+        email:
+          description: Correo electrónico del usuario
+          type: string
+          example: agarcia@mail.com
+    ConfiguracionInformacion:
+      type: object
+      properties:
+        nombre: 
+          description: Nombre del usuario.
+          type: string
+          example: Perico
+        apellidos: 
+          description: Apellidos del usuario.
+          type: string
+          example: 'De los Palotes'
+        fechaNacimiento:
+          description: Fecha de nacimiento del usuario.
+          type: string
+          format: date
+        idNacionalidad:
+          description: Identificador ISO 3166-1 del país de nacionalidad del usuario.
+          type: number
+          example: 218
+        idPaisResidencia:
+          description: Identificador ISO 3166-1 del país de residencia del usuario.
+          type: number
+          example: 218
+        telefono:
+          $ref: '#/components/schemas/Telefono'
+        
+    Telefono:
+      type: object
+      properties:
+        prefijoInternacional:
+          description: Prefijo internacional del teléfono del usuario.
+          type: string
+          example: '+593'
+        numero:
+          description: Parte local del número de teléfono del usuario.
+          type: string
+          format: regex
+          pattern: ^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$
+          example: '0984966492'
+    
+    Beneficiario:
+      type: object
+      properties: 
+        idBeneficiario:
+          description: Identificador del beneficiario
+          type: string
+          format: uuid
+          example: fad05b21-cf68-4f94-9b25-e916edce5192
+        nombre:
+          description: Nombre del beneficiario
+          type: string
+          example: 'Beneficiario'
+        apellidos:
+          description: Apellidos del beneficiario
+          type: string
+          example: 'Apellido'
+        email: 
+          description: Correo electrónico del beneficiario
+          type: string
+          format: email
+        parentesco:
+          description: Parentesco con beneficiario
+          type: string
+          enum: [padre/madre,
+           hermano/a, 
+           hijo/a,
+           sobrino/a,
+           abuelo/a,
+           tio/a,
+           primo/a,
+           cuñado/a,
+           yerno/nuera,
+           otro]
+        porcentaje: 
+          description: Porcentaje 
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+    
+    Wallet:
+      type: object
+      properties:
+        address:
+          description: Dirección de la wallet
+          type: string
+          format: regex
+          pattern: '^(0x){1}[0-9a-fA-F]{40}$'
+          minLength: 40
+          maxLength: 40
+        red:
+          description: Red a la que pertenece la wallet. 
+          type: string
+          enum: 
+            - bep20
+        estaVerificada:
+          description: Indica si la wallet ha sido verificada por la plataforma.
+          type: boolean
+    
+    ConfiguracionResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        cuentaVerificada:
+          description: Flag que indica si el usuario ha verificado la cuenta.
+          type: boolean
+        walletAsociada:
+          description: Wallet asociada del usuario, ya verificada.
+          type: string
+          example: '0x7e009Dc52eE3221f804600FD0632B8959dEfd065'
+        perfil:
+          $ref: '#/components/schemas/ConfiguracionPerfil'
+        informacionPersonal:
+          $ref: '#/components/schemas/ConfiguracionInformacion'
+        beneficiarios:
+          type: array
+          maxItems: 3
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Beneficiario'
+
+    AportacionesResponse:
+      type: object
+      properties:
+        aportaciones: 
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Aportacion'
+
+    Aportacion:
+      type: object
+      properties:
+        idAportacion: 
+          type: string
+          format: uuid
+        valor:
+          type: number
+          minimum: 0
+        estado:
+          type: string
+          enum: 
+            - EnProceso
+            - Activo
+            - Retirando
+        fechaAportacion:
+          type: string
+          format: date
+        fechaFinPenalizacion:
+          type: string
+          format: date
+        disponibilidadRetiro:
+          type: string
+          enum: 
+            - NoDisponible
+            - Penalizado
+            - Disponible
+            - Retirando
+        progresoPenalizacion:
+          type: integer
+          minimum: 0
+          maximum: 100
+    
+    AportacionNueva:
+      type: object 
+      properties:
+        userId:
+          type: string
+          format: uuid
+        valor:
+          type: number
+          minimum: 10
+          maximum: 1000000
+        txnHash:
+          type: string
+          format: regex
+          pattern: '^(0x){1}[0-9a-fA-F]{66}$'
+
+    AportacionRetirar:
+      type: object 
+      properties:
+        userId:
+          type: string
+          format: uuid
+        aportacionId:
+          type: string
+          format: uuid
+    
+    RetirosResponse:
+      type: object
+      properties:
+        retirosHabilitados:
+          description: ¿Están habilitados los retiros a nivel global?
+          type: boolean
+        beneficiosDisponbles:
+          description: Beneficios disponibles del usuario
+          type: number
+        retiros:
+          description: Array con los retiros preparados para el usuario
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Retiros'
+        historial:
+          description: Últimos retiros ya realizados
+          type: array
+          minItems: 0
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RetirosHistorial'
+    
+    Retiros:
+      type: object
+      properties:
+        retiroId:
+          description: Identificador del retiro
+          type: string
+          format: uuid
+        valor:
+          description: Valor del retiro
+          type: number
+          minimum: 0
+        tipo:
+          description: Tipo de retiro
+          type: string
+          enum:
+            - BonoResidual
+            - BonoDirecto
+            - BonoCarrera
+            - Beneficio
+            - Capital
+        estado:
+          description: Estado en el que se encuentra el retiro
+          type: string
+          enum: 
+            - Listo
+            - EnProceso
+        fechaEfectiva:
+          description: Fecha en la que podrá hacerse efectivo el retiro.
+          type: string
+          format: date
+
+    RetirosHistorial:
+      type: object
+      properties:
+        tipo:
+          description: Tipo de retiro
+          type: string
+          enum:
+            - BonoResidual
+            - BonoDirecto
+            - BonoCarrera
+            - Beneficio
+            - Capital
+        valor:
+          description: Valor del retiro
+          type: number
+          minimum: 0
+        fechaRetiro:
+          description: Fecha efectiva del retiro
+          type: string
+          format: date
+
+    RetirosConfirmacion:
+      type: object 
+      properties:
+        userId:
+          description: Identificador del usuario que realiza el retiro.
+          type: string
+          format: uuid
+        retiroId: 
+          description: Identificador del retiro que se va a confirmar.
+          type: string
+          format: uuid
+        valor:
+          description: Valor del retiro.
+          type: number
+          minimum: 10
+          maximum: 1000000
+        txnHash:
+          description: Hash de la transacción en la blockchain
+          type: string
+          format: regex
+          pattern: '^(0x){1}[0-9a-fA-F]{66}$'
+
+    AsesorAlta:
+      type: object
+      properties:
+        userId:
+          description: Identificador del usuario que al que se le realiza el alta como asesor
+          type: string
+          format: uuid
+        txnHash:
+          description: Hash de la transacción en la blockchain del pago de la membresía
+          type: string
+          format: regex
+          pattern: '^(0x){1}[0-9a-fA-F]{66}$'
+    
+    AsesorResponse:
+      type: object
+      properties:
+        diasRestantes:
+          description: Días restantes de membresía.'
+          type: integer
+          minimum: 0
+          maximum: 365
+        bonoCarrera:
+          $ref: '#/components/schemas/BonoCarrera'
+        bonoDirecto:
+          description: Bono directo disponibles
+          type: number
+          minimum: 0
+        bonoResidual:
+          description: Bono residual disponibles
+          type: number
+          minimum: 0
+        habilitacionSolicitudes:
+          $ref: '#/components/schemas/BonosHabilitados'
+
+          
+    BonoCarrera:
+      type: object
+      properties:
+        valorObjetivo:
+          description: Valor del siguiente objetivo dentro de la carrera.
+          type: integer
+        valorObjetivoConseguido:
+          description: Valor ya conseguido sobre el objetido de carrera. 
+          type: integer
+        porcentajeObjetivo:
+          description: Porcentaje del objetivo conseguido.
+          type: number
+          minimum: 0
+          maximum: 100
+
+    BonosHabilitados:
+      description: Estructura que determina qué solicitudes están habilitadas en la pantalla de Asesores
+      type: object
+      properties:
+        solicitarBonoCarrera:
+          description: ¿Está habilitada la solicitud de bono de carrera?
+          type: boolean
+        solicitarBonoDirecto:
+          description: ¿Está habilitada la solicitud de bono directo?
+          type: boolean
+        solicitarBonoResidual:
+          description: ¿Está habilitada la solicitud de bono residual?
+          type: boolean
+        
+    
+    BonoSolicitarRequest:
+      type: object
+      properties:
+        userId:
+          description: Identificador del usuario que solicita la retirada de un bono
+          type: string
+          format: uuid
+        tipo:
+          description: Tipo de bono que se desea retirar
+          type: string
+          enum:
+            - Carrera
+            - Directo
+            - Residual
+        
+
+    BonoValidarRequest:
+      type: object
+      properties:
+        userId:
+          description: Identificador del usuario que solicita la retirada de un bono
+          type: string
+          format: uuid
+        tipo:
+          description: Tipo de bono que se desea retirar
+          type: string
+          enum:
+            - Carrera
+            - Directo
+            - Residual
+        codigoConfirmacion:
+          description: Código de confirmación recibido por correo electrónico
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+  
+  responses:
+    400BadRequest: 
+      description: '**Bad Request** indica que el servidor no procesará la petición debido a que algo se ha percibido como error del cliente (sintaxis incorrecta por ejemplo).'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/Error'
+    
+    401Unauthorized: 
+      description: '**Unauthorized** indica que la petición del cliente no ha sido completada debido a la falta de unas credenciales de autenticación válidas para el recurso solicitado.'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/Error'
+
+    404NotFound: 
+      description: '**Not Found** indica que el servidor no puede encontrar el recurso solicitado.'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/Error'
+    
+    5xxUnexpected: 
+      description: '**Error** indica que se ha encontrado un error inesperado.'
+      content:
+        application/json:
+          schema:
+           $ref: '#/components/schemas/Error'
+    
+  securitySchemes: 
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Usuario
+  - name: Configuracion
+  - name: Aportaciones
+  - name: Retiros
+  - name: Asesores
+  
+security:
+  - bearerAuth: []
