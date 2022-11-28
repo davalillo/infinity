@@ -104,26 +104,25 @@ paths:
         '400':
           $ref: '#/components/responses/400BadRequest'
 
-# El proceso de recuperación de contraseña no está fin
-  /usuarios/solicitarcodigo/{userId}:
-    get:
-      description: Método para solicitar el envío de un código de validación
-      tags:
-        - Usuario
-      parameters:
-        - in: path
-          required: true
-          name: userId
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: '**No content** indica que el código se ha solicitado correctamente'
-        '400': 
-          $ref: '#/components/responses/400BadRequest'
-        '404':
-          $ref: '#/components/responses/404NotFound'
+  # /usuarios/solicitarcodigo/{userId}:
+  #   get:
+  #     description: Método para solicitar el envío de un código de validación
+  #     tags:
+  #       - Usuario
+  #     parameters:
+  #       - in: path
+  #         required: true
+  #         name: userId
+  #         schema:
+  #           type: string
+  #           format: uuid
+  #     responses:
+  #       '204':
+  #         description: '**No content** indica que el código se ha solicitado correctamente'
+  #       '400': 
+  #         $ref: '#/components/responses/400BadRequest'
+  #       '404':
+  #         $ref: '#/components/responses/404NotFound'
   
   /usuarios/checkToken/{token}:
     get:
@@ -146,6 +145,30 @@ paths:
                 $ref: '#/components/schemas/CheckTokenResponse'
                 
       security: []  
+
+  /usuarios/solicitarCambioPassword:
+    post:
+      description: Método para solicitar el envío de correo de cambio de contraseña.'
+      tags:
+        - Usuario
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '204':
+          description: '**No Content** indica que el correo de cambio de contraseña ha sido enviado.'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '5XX':
+          $ref: '#/components/responses/5xxUnexpected'
   
   /usuarios/cambiarPassword:
     post:
@@ -158,6 +181,16 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CambiarPasswordRequest'
+
+      responses:
+        '204':
+          description: '**No Content** indica que la contraseña ha sido cambiada correctamente'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '5XX':
+          $ref: '#/components/responses/5xxUnexpected'
 
 
 
